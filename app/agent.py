@@ -6,13 +6,22 @@ import json
 
 from . import models, tools
 from .audit import audit
-from .config import ACTION_TIERS, PIC_ALLOWLIST, YIELD_THRESHOLD
+from .config import ACTION_TIERS, PIC_ALLOWLIST, SHEETS_CSV_URL, YIELD_THRESHOLD
 from .llm import build_prompt, call_llm
 
 
 def run_agent_cycle() -> dict:
-    """Satu putaran: Observe → Analyze → Assign + Follow-up → Escalate."""
+    """Satu putaran: (Sheets sync) → Observe → Analyze → Assign + Follow-up → Escalate."""
     report = {"analyzed": 0, "assigned": 0, "escalated": 0, "rejected": 0, "reminded": 0}
+
+    # 0. INGEST opsional: Google Sheet → daily_production (noop jika env kosong)
+    if SHEETS_CSV_URL:
+        try:
+            from .sheets import sync_from_csv
+            sync_from_csv()
+        except Exception as e:  # noqa: BLE001 — sumber eksternal tak boleh matikan cycle
+            audit("agent", "sheets_sync_error", error=str(e))
+
 
     with models.SessionLocal() as s:
         stations = [r[0] for r in s.query(models.DailyProduction.station).distinct().all()]

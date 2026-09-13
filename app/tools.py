@@ -78,11 +78,13 @@ def create_task(case_id: int, pic: str, station: str, description: str, due_days
         raise PermissionError(f"pic_not_in_allowlist: {pic} @ {station}")
 
     max_per_day = int(RATE_LIMIT.get("max_tasks_per_station_per_day", 1))
+    utc_today = dt.datetime.utcnow().date()  # satukan dgn created_at (UTC)
     with models.SessionLocal() as s:
         today_count = (
             s.query(models.Task)
             .filter(models.Task.station == station,
-                    models.Task.created_at >= dt.datetime.combine(_today(), dt.time.min))
+                    models.Task.created_at >= dt.datetime.combine(
+                        utc_today, dt.time.min))
             .count()
         )
         if today_count >= max_per_day:
@@ -101,6 +103,11 @@ def create_task(case_id: int, pic: str, station: str, description: str, due_days
         case.status = "assigned"
         s.commit()
         task_id = task.id
+        due = task.due_date
+
+    # Notifikasi PIC (best-effort; tanpa token/gagal kirim → task tetap di web UI)
+    from .telegram import notify_task
+    notify_task(task_id, pic, station, description, due)
 
     audit("agent", "create_task", task_id=task_id, case_id=case_id, pic=pic,
           station=station, description=description)

@@ -18,6 +18,10 @@ MOCK_LLM = os.getenv("MOCK_LLM", "0") == "1"
 DATABASE_URL = os.getenv("DATABASE_URL") or f"sqlite:///{os.path.join(BASE_DIR, 'agent.db')}"
 AGENT_INTERVAL_SEC = int(os.getenv("AGENT_INTERVAL_SEC", "30"))
 AGENT_ENABLED = os.getenv("AGENT_ENABLED", "1") == "1"
+SHEETS_CSV_URL = os.getenv("SHEETS_CSV_URL", "")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_ENABLED = bool(TELEGRAM_BOT_TOKEN)
+TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "")  # host publik, deploy
 
 
 def _load_yaml() -> dict:
