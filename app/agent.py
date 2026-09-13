@@ -68,7 +68,7 @@ def run_agent_cycle() -> dict:
     # 5-6. FOLLOW-UP → ESCALATE
     for t in tools.get_overdue_tasks():
         try:
-            tools.send_reminder(t["task_id"])
+            tools.send_reminder(t["id"])
             report["reminded"] += 1
         except ValueError:
             pass

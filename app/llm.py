@@ -105,7 +105,7 @@ def _mock_analyze(prompt: str) -> dict[str, Any] | None:
                 worst_yield, worst_line = y, line
     if worst_yield is None:
         return None
-    m_pic = re.search(r"salah satu dari: ([^\n]+)\.", prompt)
+    m_pic = re.search(r"salah satu dari: (.+?)\.", prompt)  # non-greedy: berhenti di titik pertama
     pic = (m_pic.group(1).split(",")[0].strip() if m_pic else "Budi")
     is_anomaly = worst_yield < 95.0
     return {
