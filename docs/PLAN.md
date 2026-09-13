@@ -16,20 +16,24 @@ Status per 2026-09-13. Fase & prioritas dikunci; perubahan lewat `DECISIONS.md`.
 **Definition of Done Fase 1 (tercapai):** seed → cycle → case+task benar;
 guardrail menolak PIC asing; audit immutable; API `/health` + `/api/stations` hidup.
 
-## Fase 2 — Integrasi Nyata (2–3 minggu)
+## Fase 2 — Integrasi Nyata (SELESAI ✅ per 2026-09-13, kecuali LLM live)
 
-- [ ] 2.1 `run_eval.py` golden set (bawa dari draft; 4 skenario awal, target 10+)
-- [ ] 2.2 LLM live: isi `OPENAI_API_KEY` (Gemini/OpenRouter free), verifikasi
-      structured output nyata lolos schema
-- [ ] 2.3 Telegram bot: PIC terima task, tombol inline `fixed`/`cannot_fix`;
-      webhook atau polling `python-telegram-bot`; map `users.telegram`
-- [ ] 2.4 Google Sheets reader: service account, baca sheet "Produksi Harian"
-      (kolom: date, station, output, ng) → upsert `daily_production`;
-      mode fallback seed jika sheet kosong
-- [ ] 2.5 Scheduler tuning: interval via env, overlap guard (skip jika cycle jalan)
+- [x] 2.1 `run_eval.py` golden set — 10/10 PASS (100%), exit-code CI-friendly
+- [x] 2.5 Scheduler overlap guard (`_cycle_lock`) + interval env (sudah ada)
+- [x] 2.4 Google Sheets reader: CSV publish URL → upsert idempotent
+      (D013) + auto-sync di awal cycle, error → audit (D016)
+- [x] 2.3 Telegram bot (D014): notify_task di create_task, callback
+      fixed/cannot + guard pemilik task, /telegram/register chat_id,
+      /telegram/setup-webhook (deploy); tanpa token = silent, web UI tetap jalan
+- [ ] 2.2 LLM live — menunggu OPENAI_API_KEY user (lihat catatan bawah)
+- [x] Bugfix produksi dari eval: rate-limit UTC (D015), agent overdue key,
+      mock PIC regex greedy — semua tertutup skenario eval otomatis
 
-**DoD Fase 2:** bot kirim task nyata; data dari sheet; LLM live menganalisis;
-eval tetap hijau (guardrail tidak berubah perilaku).
+**Catatan 2.2:** semua jalur LLM sudah siap (OpenAI-compatible, forced tool
+choice). Yang belum = eksekusi verifikasi live: isi `OPENAI_API_KEY` di
+`.env` (OpenRouter free / Gemini), `MOCK_LLM=0`, `POST /agent/run`, lihat
+audit `analysis_recorded` dari model nyata. Juga catat di DECISIONS model
+mana yang dipilih.
 
 ## Fase 3 — Evaluation & Hardening (1–2 minggu)
 

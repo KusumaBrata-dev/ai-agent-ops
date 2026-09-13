@@ -56,3 +56,23 @@ D012 · 2026-09-13 · Docs-first: PRD/PLAN/SCHEMA/RULES dikunci sebelum Fase 2
 Alasan: permintaan eksplisit user — agar project tidak keluar dari plan.
 Dampak: semua fitur baru HARUS lewat entri DECISIONS + update PRD dulu
 (lihat RULES §1).
+
+D013 · 2026-09-13 · Sheets via CSV publish URL, BUKAN Sheets API resmi
+Alasan: portfolio butuh baca data — CSV publish nol auth, nol dependency,
+idempotent upsert (date,station). Dampak: private sheet / write-back →
+upgrade ke service account (catat entri baru saat itu).
+
+D014 · 2026-09-13 · Telegram: httpx Bot API send-only + callback webhook,
+BUKAN framework python-telegram-bot
+Alasan: butuh 3 hal saja (kirim task, tombol fixed/cannot, map chat_id) —
+framework = dependency + proses polling terpisah. Dampak: fitur chat
+interaktif penuh (command /tasks, dsb.) → baru pertimbangkan framework.
+
+D015 · 2026-09-13 · Rate limit pakai UTC (utcnow), bukan tanggal lokal
+Alasan: bug nyata — created_at UTC vs filter local midnight (UTC+7) bikin
+rate limit bocor saat lewat tengah malam WIB. Dampak: satu sumber waktu
+(UTC) untuk created_at + rate-limit. PRD AC-3 tetap hijau (eval E7).
+
+D016 · 2026-09-13 · Sheets auto-sync di awal cycle, error → audit bukan crash
+Alasan: sumber eksternal (internet/Google) tidak boleh matikan agent loop.
+Dampak: cycle jalan dengan data terakhir yang ada bila sync gagal.
