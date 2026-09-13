@@ -1,0 +1,35 @@
+# Konfigurasi Agent — escalation matrix + allowlist PIC
+# Diambil dari data riwayat rata-rata produksi tiap stasiun.
+
+# PIC allowlist: stasiun -> daftar PIC yang BOLEH ditugaskan agent.
+# PIC di luar list = agent DILARANG menugaskan -> eskalasi ke lead.
+pic_allowlist:
+  SMT-01: [Budi, Sari]
+  SMT-02: [Andi]
+  ASY-01: [Dewi, Rian]
+  TEST-01: [Budi, Andi]
+  PACK-01: [Sari]
+
+# Tier aksi:
+#   auto      : agent boleh langsung (buat task, kirim pesan, reminder)
+#   approval  : butuh approval manusia via /pending
+#   forbidden : agent tidak boleh lakukan, apapun kata LLM (tidak ada tool-nya)
+action_tiers:
+  create_task: auto
+  send_reminder: auto
+  escalate_to_lead: approval
+  close_case: approval
+
+# Escalation matrix: kondisi -> target eskalasi
+escalation_matrix:
+  task_overdue_1day: lead_qc
+  anomaly_repeated_3x: head_production
+  no_evidence_in_analysis: lead_qc
+  pic_not_in_allowlist: head_production
+
+# Batas guardrail
+rate_limit:
+  max_tasks_per_station_per_day: 1
+
+# Target yield minimum per stasiun (persen) — ambang analisis
+yield_threshold: 95.0

@@ -1,0 +1,13 @@
+# .gitignore — ai-agent-ops
+.env
+agent.db
+agent.db-journal
+*.log
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+eval_report.md.bak
+.DS_Store
