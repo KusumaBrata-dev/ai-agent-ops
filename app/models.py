@@ -120,14 +120,28 @@ def init_db() -> None:
 
 
 def _install_audit_triggers() -> None:
-    if not DATABASE_URL.startswith("sqlite"):
-        return  # prod: pasang trigger via migration PostgreSQL
+    if DATABASE_URL.startswith("sqlite"):
+        with engine.begin() as conn:
+            conn.exec_driver_sql(
+                "CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log "
+                "BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;"
+            )
+            conn.exec_driver_sql(
+                "CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log "
+                "BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;"
+            )
+        return
+    # PostgreSQL: idempotent — aman dipanggil tiap startup (F4.2)
+    pg_sql = """
+    CREATE OR REPLACE FUNCTION forbid_audit_mutation() RETURNS trigger AS $$
+    BEGIN RAISE EXCEPTION 'audit_log is append-only'; END;
+    $$ LANGUAGE plpgsql;
+    DROP TRIGGER IF EXISTS audit_no_update ON audit_log;
+    CREATE TRIGGER audit_no_update BEFORE UPDATE ON audit_log
+        FOR EACH ROW EXECUTE FUNCTION forbid_audit_mutation();
+    DROP TRIGGER IF EXISTS audit_no_delete ON audit_log;
+    CREATE TRIGGER audit_no_delete BEFORE DELETE ON audit_log
+        FOR EACH ROW EXECUTE FUNCTION forbid_audit_mutation();
+    """
     with engine.begin() as conn:
-        conn.exec_driver_sql(
-            "CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log "
-            "BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;"
-        )
-        conn.exec_driver_sql(
-            "CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log "
-            "BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;"
-        )
+        conn.exec_driver_sql(pg_sql)

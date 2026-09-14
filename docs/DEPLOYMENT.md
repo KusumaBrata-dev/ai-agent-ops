@@ -29,17 +29,19 @@ untuk kontrol manual via POST /agent/run).
 Aturan: **tidak ada nilai lain hardcode**. Tambah env var baru → update
 tabel ini (dokumen = kontrak config).
 
-## 3. Docker (Fase 4 — rencana)
+## 3. Docker / Production (Fase 4 — file siap)
 
+```bash
+# .env minimal: OPENAI_API_KEY (atau MOCK_LLM=1 utk demo)
+docker compose up -d --build     # app + PostgreSQL 16
+# cek: http://localhost:8000/health
 ```
-docker-compose.yml:
-  app:     build ., env-file .env, depends_on db
-  db:      postgres:16-alpine, volume pgdata
-migrasi: init SQL membuat trigger append-only versi PG:
-  CREATE OR REPLACE FUNCTION forbid_mutation() ...
-  CREATE TRIGGER ... BEFORE UPDATE OR DELETE ON audit_log
-  REVOKE UPDATE, DELETE ON audit_log FROM app_user;
-```
+
+- `db/init/01_audit_triggers.sql` jalan otomatis saat volume DB pertama
+- App startup memasang ulang trigger secara idempotent (D018) — invarian
+  append-only dijamin bahkan pada volume lama
+- Healthcheck: `/health` tiap 60s, restart `unless-stopped`
+- Password DB di compose = demo lokal; prod: ganti via env/secret manager
 
 ## 4. Operasional harian
 

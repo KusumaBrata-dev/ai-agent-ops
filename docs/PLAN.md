@@ -51,16 +51,20 @@ mana yang dipilih.
 **DoD Fase 3:** `python run_eval.py` ≥ 85% (aktual 100%), hardening masuk
 main, semua docs sinkron. TERCAPAI.
 
-## Fase 4 — Production & Portfolio Packaging (1–2 minggu)
+## Fase 4 — Production & Portfolio Packaging (berjalan — file siap, build menunggu Docker di PC)
 
-- [ ] 4.1 Docker: `Dockerfile` + `docker-compose.yml` (app + PostgreSQL + migrasi)
-- [ ] 4.2 PostgreSQL: trigger append-only versi PG (migration SQL)
-- [ ] 4.3 Dokumentasi final: README (badge, diagram, quickstart), API docs,
-      runbook recovery, video demo 5 menit
-- [ ] 4.4 CV: narasi mapping job desc (lihat docs/PORTFOLIO-CV.md bila dibuat)
-- [ ] 4.5 Publikasi: repo GitHub public, hapus data sensitif, tag `v1.0.0`
+- [x] 4.1 Dockerfile (slim, non-root, healthcheck /health) + docker-compose
+      (app + PostgreSQL 16, env inject, restart policy) — D019
+- [x] 4.2 PG trigger append-only: `db/init/01_audit_triggers.sql` (volume baru)
+      + pemasangan idempotent oleh app startup (D018) — invarian selalu aktif
+- [x] 4.3 README final (badge, arsitektur, quickstart offline 2 menit,
+      tabel fitur keamanan, struktur, batas by-design)
+- [ ] 4.4 `docker compose up --build` verifikasi fisik — **menunggu Docker
+      Desktop terinstall** (file siap, tak ada perubahan kode yang tersisa)
+- [ ] 4.5 Video demo 5 menit + tag `v1.0.0` + push GitHub public
+      (cek SECURITY.md §4: data dummy saja — sudah dummy dari awal)
 
-**DoD Fase 4:** `docker compose up` jalan penuh; video demo; tag rilis.
+**DoD Fase 4 (tersisa):** compose jalan fisik; demo video; repo public.
 
 ## Urutan eksekusi yang DILARANG diubah
 

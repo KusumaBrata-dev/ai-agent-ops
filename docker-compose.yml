@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: agent_local_pwd   # demo lokal saja; prod: env/secret manager
+      POSTGRES_DB: agentops
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro   # trigger append-only F4.2
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d agentops"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://agent:agent_local_pwd@db:5432/agentops
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MODEL_NAME: ${MODEL_NAME:-nvidia/nemotron-3.5-lightning:free}
+      MOCK_LLM: ${MOCK_LLM:-0}
+      AGENT_INTERVAL_SEC: ${AGENT_INTERVAL_SEC:-3600}
+      SHEETS_CSV_URL: ${SHEETS_CSV_URL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL:-}
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -85,3 +85,14 @@ confidence 0.95. Dampak: MODEL_NAME di .env default baru; ganti model =
 ganti env saja (arsitektur tetap provider-agnostic). Analisis LLM keluar
 bahasa Inggris — acceptable utk portfolio (prompt bisa ditulis "jawab dalam
 Bahasa Indonesia" saat operasional).
+
+D018 · 2026-09-14 · PG trigger dipasang idempotent oleh app saat startup
+Alasan: init SQL (db/init) hanya jalan saat volume baru; volume lama/DBA
+manual bisa ketinggalan — app startup memasang ulang (CREATE OR REPLACE +
+DROP IF EXISTS) menjamin invarian append-only selalu aktif. Dampak: startup
+butuh hak CREATE TRIGGER (user postgres di compose, cukup utk deployment ini).
+
+D019 · 2026-09-14 · Image Docker: python:3.12-slim, non-root user, healthcheck
+/health
+Alasan: baseline keamanan container tanpa perlu distroless (portfolio).
+Dampak: upgrade distroless tercatat sebagai opsi saat operasional.
