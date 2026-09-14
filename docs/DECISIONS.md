@@ -116,3 +116,13 @@ D021 · 2026-09-14 · PLAN F4.5 selesai; sisa user-side = video demo 5 menit
 Alasan: semua verifikasi teknis hijau (smoke 3/3, eval 10/10, compose fisik).
 Video = narasi manusia, tidak bisa diotomatisasi. Resep: quickstart mock →
 panel web approval → jawab PIC → audit log → run_eval 10/10 → docker ps.
+
+D022 · 2026-09-14 · E2E testing menemukan 3 bug (semua sudah fix + committed)
+(1) verify tidak ada counter di report → tambah report["verified"];
+(2) approval close duplikat tiap cycle saat case status 'verify' menetap →
+guard _has_pending_close; (3) close_case approval hanya tandai approved tanpa
+realisasi (case tak pernah closed, memory tak ditulis) → realisasi di decide();
+(4) audit() kwarg `action=` tabrakan dgn argumen positional → rename
+tool_action. Alasan fix di root (shared path), bukan gejala: verify+close
+sekarang satu-satunya jalur tutup case. Dampak: siklus 8 tahap terverifikasi
+penuh via API (observe→…→closed+history), smoke 3/3 + eval 10/10 tetap hijau.
