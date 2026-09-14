@@ -63,8 +63,11 @@ main, semua docs sinkron. TERCAPAI.
       (Docker Engine di WSL, D020): health OK, seed OK, agent cycle assigned,
       PG trigger menolak UPDATE audit_log. Fixes saat build: psycopg2-binary,
       python-multipart, seed.py import, hapus init-SQL chicken-and-egg
-- [ ] 4.5 Video demo 5 menit + tag `v1.0.0` + push GitHub public
-      (cek SECURITY.md §4: data dummy saja — sudah dummy dari awal)
+- [x] 4.5 Repo public https://github.com/KusumaBrata-dev/ai-agent-ops + tag
+      `v1.0.0` menunjuk HEAD final (eval_report tracked, .env/agent.db
+      verified untracked, stub GitHub di-merge) — D021
+- [ ] 4.6 Video demo 5 menit (user-side): quickstart mock → panel web
+      approval → jawab PIC → audit log → `python run_eval.py` 10/10 → docker ps
 
 **DoD Fase 4 (tersisa):** compose jalan fisik; demo video; repo public.
 

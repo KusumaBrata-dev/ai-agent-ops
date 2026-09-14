@@ -105,7 +105,14 @@ Alasan: PC tanpa Docker Desktop — Engine + compose v5 di WSL Ubuntu cukup.
 Pelajaran build: (1) init-SQL db/init = chicken-and-egg (tabel belum ada saat
 init jalan) → dihapus, trigger dipasang app-startup saja (lihat D018);
 (2) psycopg2-binary + python-multipart harus masuk requirements (dev SQLite
-tidak menangkap); (3) exec/exec-idle VM WSL (vmIdleTimeout) bikin DNS compose
-race — jalankan build+seed+verify dalam SATU sesi wsl sh -c.
-Dampak: DoD Fase 4.4 tercapai — compose up → health OK, seed, agent cycle
-assigned, PG trigger menolak UPDATE audit_log.
+tidak menangkap); (3) VM WSL idle (vmIdleTimeout) bikin exec antar-sesi kena
+DNS compose race — jalankan build+seed+verify dalam SATU sesi wsl sh -c.
+Dampak: compose up → health OK, seed, agent cycle assigned, PG trigger
+menolak UPDATE audit_log. Status akhir: https://github.com/KusumaBrata-dev/ai-agent-ops
+public, main pushed, tag v1.0.0 menunjuk HEAD final (re-tag paksa dari commit
+pra-merge — repo baru, aman).
+
+D021 · 2026-09-14 · PLAN F4.5 selesai; sisa user-side = video demo 5 menit
+Alasan: semua verifikasi teknis hijau (smoke 3/3, eval 10/10, compose fisik).
+Video = narasi manusia, tidak bisa diotomatisasi. Resep: quickstart mock →
+panel web approval → jawab PIC → audit log → run_eval 10/10 → docker ps.
