@@ -96,7 +96,6 @@ app/            config, models, schemas, llm (mock+live), tools (7), agent,
 tests/smoke.py  guardrail + audit + cycle
 run_eval.py     golden set E1-E10
 docs/           PRD, PLAN, SCHEMA, RULES, WORKFLOW, EVALUATION, DEPLOYMENT, SECURITY, DECISIONS
-db/init/        trigger append-only PostgreSQL
 ```
 
 ## Batas (by design)
