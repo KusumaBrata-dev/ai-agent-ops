@@ -59,8 +59,10 @@ main, semua docs sinkron. TERCAPAI.
       + pemasangan idempotent oleh app startup (D018) — invarian selalu aktif
 - [x] 4.3 README final (badge, arsitektur, quickstart offline 2 menit,
       tabel fitur keamanan, struktur, batas by-design)
-- [ ] 4.4 `docker compose up --build` verifikasi fisik — **menunggu Docker
-      Desktop terinstall** (file siap, tak ada perubahan kode yang tersisa)
+- [x] 4.4 `docker compose up --build` verifikasi fisik — **SELESAI 2026-09-14**
+      (Docker Engine di WSL, D020): health OK, seed OK, agent cycle assigned,
+      PG trigger menolak UPDATE audit_log. Fixes saat build: psycopg2-binary,
+      python-multipart, seed.py import, hapus init-SQL chicken-and-egg
 - [ ] 4.5 Video demo 5 menit + tag `v1.0.0` + push GitHub public
       (cek SECURITY.md §4: data dummy saja — sudah dummy dari awal)
 

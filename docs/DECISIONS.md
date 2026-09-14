@@ -87,12 +87,25 @@ bahasa Inggris — acceptable utk portfolio (prompt bisa ditulis "jawab dalam
 Bahasa Indonesia" saat operasional).
 
 D018 · 2026-09-14 · PG trigger dipasang idempotent oleh app saat startup
-Alasan: init SQL (db/init) hanya jalan saat volume baru; volume lama/DBA
-manual bisa ketinggalan — app startup memasang ulang (CREATE OR REPLACE +
-DROP IF EXISTS) menjamin invarian append-only selalu aktif. Dampak: startup
-butuh hak CREATE TRIGGER (user postgres di compose, cukup utk deployment ini).
+Alasan: ORM create_all membuat tabel; trigger hanya bisa dipasang SETELAH
+tabel ada. Init-SQL docker ternyata chicken-and-egg (jalan sebelum tabel
+dibuat → kontainer DB gagal start — terbukti saat build fisik 2026-09-14,
+init SQL dihapus). App startup memasang (CREATE OR REPLACE + DROP IF
+EXISTS) menjamin invarian append-only selalu aktif, termasuk volume lama.
+Dampak: startup butuh hak CREATE TRIGGER; invarian tetap teruji via
+eval/smoke.
 
 D019 · 2026-09-14 · Image Docker: python:3.12-slim, non-root user, healthcheck
 /health
 Alasan: baseline keamanan container tanpa perlu distroless (portfolio).
 Dampak: upgrade distroless tercatat sebagai opsi saat operasional.
+
+D020 · 2026-09-14 · Docker: build fisik terverifikasi via Docker Engine di WSL
+Alasan: PC tanpa Docker Desktop — Engine + compose v5 di WSL Ubuntu cukup.
+Pelajaran build: (1) init-SQL db/init = chicken-and-egg (tabel belum ada saat
+init jalan) → dihapus, trigger dipasang app-startup saja (lihat D018);
+(2) psycopg2-binary + python-multipart harus masuk requirements (dev SQLite
+tidak menangkap); (3) exec/exec-idle VM WSL (vmIdleTimeout) bikin DNS compose
+race — jalankan build+seed+verify dalam SATU sesi wsl sh -c.
+Dampak: DoD Fase 4.4 tercapai — compose up → health OK, seed, agent cycle
+assigned, PG trigger menolak UPDATE audit_log.
