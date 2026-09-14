@@ -107,9 +107,21 @@ def decide(approval_id: int, decision: str = Form(...), by: str = Form(...)):
                     description=f"ESKALASI: {payload.get('reason','')} — review case {payload['case_id']}",
                     due_date=dt.date.today() + dt.timedelta(days=1), approved_by=by,
                 ))
+        if ap.status == "approved" and ap.action == "close_case":
+            # Realisasi close: tutup case + tulis memory (WORKFLOW.md langkah 8).
+            case = s.get(models.Case, payload["case_id"])
+            if case and case.status != "closed":
+                s.add(models.CaseHistory(
+                    station=case.station,
+                    summary=(f"Case {case.id}: {case.analysis[:120]} "
+                             f"Yield pulih ke {payload.get('verified_yield', '?')}% — "
+                             f"disetujui {by}."),
+                    outcome="fixed",
+                ))
+                case.status = "closed"
         s.commit()
     audit(f"approver:{by}", f"approval_{ap.status}", approval_id=approval_id,
-          action=ap.action, payload=ap.payload)
+          tool_action=ap.action, payload=ap.payload)
     return {"ok": True, "approval": approval_id, "status": ap.status}
 
 

@@ -13,7 +13,7 @@ from .llm import build_prompt, call_llm
 
 def run_agent_cycle() -> dict:
     """Satu putaran: (Sheets sync) → Observe → Analyze → Assign + Follow-up → Escalate."""
-    report = {"analyzed": 0, "assigned": 0, "escalated": 0, "rejected": 0, "reminded": 0}
+    report = {"analyzed": 0, "assigned": 0, "escalated": 0, "rejected": 0, "reminded": 0, "verified": 0}
 
     # 0. INGEST opsional: Google Sheet → daily_production (noop jika env kosong)
     if SHEETS_CSV_URL:
@@ -91,12 +91,24 @@ def run_agent_cycle() -> dict:
                 report["escalated"] += 1
 
     # 7. VERIFY: task fixed → cek data hari setelahnya membaik (diproses cycle berikut)
-    _verify_fixed_cases()
+    report["verified"] = _verify_fixed_cases()
     return report
 
 
-def _verify_fixed_cases() -> None:
+def _has_pending_close(case_id: int, s) -> bool:
+    """Cegah approval close duplikat tiap cycle (case status 'verify' menetap)."""
+    pendings = (
+        s.query(models.Approval)
+        .filter(models.Approval.action == "close_case",
+                models.Approval.status == "pending")
+        .all()
+    )
+    return any(json.loads(a.payload).get("case_id") == case_id for a in pendings)
+
+
+def _verify_fixed_cases() -> int:
     """Task fixed → kalau yield terakhir >= threshold, tutup case + simpan memory."""
+    n = 0
     with models.SessionLocal() as s:
         fixed_tasks = s.query(models.Task).filter(models.Task.status == "fixed").all()
         for t in fixed_tasks:
@@ -112,16 +124,21 @@ def _verify_fixed_cases() -> None:
             )
             if latest and latest.yield_pct >= YIELD_THRESHOLD:
                 if ACTION_TIERS.get("close_case") == "approval":
+                    if _has_pending_close(t.case_id, s):
+                        continue  # sudah antre, jangan duplikat
                     s.add(models.Approval(
                         action="close_case",
                         payload=json.dumps({"case_id": t.case_id, "station": t.station,
                                             "verified_yield": latest.yield_pct}),
                     ))
                     case.status = "verify"
+                    n += 1
                 else:
                     tools.record_case_outcome(
                         case_id=t.case_id,
                         summary=f"Yield pulih ke {latest.yield_pct:.1f}% setelah tugas {t.id}",
                         outcome="fixed",
                     )
+                    n += 1
         s.commit()
+    return n
