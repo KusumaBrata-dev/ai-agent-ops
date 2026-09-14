@@ -106,4 +106,4 @@ Tidak ada: chart dashboard, RAG, multi-tenant, fine-tuning, tool keuangan/HR
 
 ## Lisensi
 
-MIT — data contoh dummy, aman dipakai portfolio.
+MIT License
