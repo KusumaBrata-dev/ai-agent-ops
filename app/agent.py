@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 
+from . import llm as llm_mod
 from . import models, tools
 from .audit import audit
 from .config import ACTION_TIERS, PIC_ALLOWLIST, SHEETS_CSV_URL, YIELD_THRESHOLD
@@ -59,7 +60,8 @@ def run_agent_cycle() -> dict:
             s.commit()
             case_id = case.id
         audit("agent", "analysis_recorded", case_id=case_id, station=station,
-              confidence=result.confidence, evidence=result.evidence)
+              confidence=result.confidence, evidence=result.evidence,
+              token_usage=getattr(llm_mod, "_LAST_USAGE", None))
         report["analyzed"] += 1
 
         # 3-4. RECOMMEND→ASSIGN

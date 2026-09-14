@@ -76,3 +76,12 @@ rate limit bocor saat lewat tengah malam WIB. Dampak: satu sumber waktu
 D016 · 2026-09-13 · Sheets auto-sync di awal cycle, error → audit bukan crash
 Alasan: sumber eksternal (internet/Google) tidak boleh matikan agent loop.
 Dampak: cycle jalan dengan data terakhir yang ada bila sync gagal.
+
+D017 · 2026-09-13 · LLM live = OpenRouter `nvidia/nemotron-3.5-lightning:free`
+Alasan: model :free valid pertama yang lolos forced tool-call + structured
+output pada verifikasi 2026-09-13 (gemma-4-31b upstream 429; gemini-2.0-flash-exp
+sudah dihapus provider). Hasil: evidence angka nyata, PIC dari allowlist,
+confidence 0.95. Dampak: MODEL_NAME di .env default baru; ganti model =
+ganti env saja (arsitektur tetap provider-agnostic). Analisis LLM keluar
+bahasa Inggris — acceptable utk portfolio (prompt bisa ditulis "jawab dalam
+Bahasa Indonesia" saat operasional).

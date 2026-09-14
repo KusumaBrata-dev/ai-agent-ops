@@ -42,7 +42,10 @@ def _extract_json(text: str) -> dict[str, Any] | None:
 
 def call_llm(prompt: str) -> AnalysisResult | None:
     """Return AnalysisResult valid, atau None (gagal/invalid). Anti-hallucination di sini."""
-    raw_args = _call_raw(prompt)
+    try:
+        raw_args = _call_raw_with_retry(prompt)
+    except (httpx.HTTPError, RuntimeError):  # provider down / key kosong → skip cycle ini
+        return None
     if raw_args is None:
         return None
     try:
@@ -55,6 +58,22 @@ def call_llm(prompt: str) -> AnalysisResult | None:
     if result.is_anomaly and not result.evidence:
         return None
     return result
+
+
+def _call_raw_with_retry(prompt: str, max_retries: int = 2) -> dict[str, Any] | None:
+    """Retry dengan backoff untuk 429/5xx (F3.3). 4xx lain = langsung gagal."""
+    import time
+
+    for attempt in range(max_retries + 1):
+        try:
+            return _call_raw(prompt)
+        except httpx.HTTPStatusError as e:
+            status = e.response.status_code
+            if status in (429, 500, 502, 503, 504) and attempt < max_retries:
+                time.sleep(2 ** attempt)  # 1s, 2s — free tier sering 429 transien
+                continue
+            raise
+    return None
 
 
 def _call_raw(prompt: str) -> dict[str, Any] | None:
@@ -76,6 +95,13 @@ def _call_raw(prompt: str) -> dict[str, Any] | None:
         resp.raise_for_status()
         data = resp.json()
 
+    # Log token usage (guard biaya, F3.3) — ke audit via caller-friendly tuple.
+    usage = data.get("usage") or {}
+    _LAST_USAGE.update(model=MODEL_NAME,
+                       prompt_tokens=usage.get("prompt_tokens", 0),
+                       completion_tokens=usage.get("completion_tokens", 0),
+                       total_tokens=usage.get("total_tokens", 0))
+
     try:
         msg = data["choices"][0]["message"]
         if msg.get("tool_calls"):
@@ -84,6 +110,9 @@ def _call_raw(prompt: str) -> dict[str, Any] | None:
         return args
     except (KeyError, IndexError):
         return None
+
+
+_LAST_USAGE: dict[str, Any] = {}  # dibaca audit cycle — biaya transparan
 
 
 def _mock_analyze(prompt: str) -> dict[str, Any] | None:
